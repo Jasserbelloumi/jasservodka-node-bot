@@ -17,15 +17,12 @@ jobs:
 
       - name: Unzip and Install
         run: |
-          unzip "TatsuYTB (1).zip"
-          # الدخول للمجلد المفكوك (تأكد من الاسم الصحيح بعد فك الضغط)
-          # سنفترض أن الملفات فُكت في المجلد الحالي
+          # فك الضغط عن الاسم الجديد bot.zip
+          unzip bot.zip
           npm install axios 
 
       - name: Inject AI Logic
         run: |
-          # هذا السطر سيقوم بتعديل ملف الرد الأساسي (سأفترض اسمه index.js)
-          # وسيجعله يتصل بـ OpenRouter للرد على أي رسالة
           cat << 'AI' > ai_logic.js
           const axios = require('axios');
           async function getReply(text) {
@@ -43,4 +40,8 @@ jobs:
           AI
 
       - name: Start Facebook Bot
-        run: node index.js
+        run: |
+          # البحث عن ملف التشغيل index.js وتشغيله
+          FILE=$(find . -name "index.js" | head -n 1)
+          if [ -z "$FILE" ]; then FILE="index.js"; fi
+          node $FILE
