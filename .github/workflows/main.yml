@@ -15,15 +15,21 @@ jobs:
         with:
           node-version: 18
 
-      - name: Unzip and Install
+      - name: Unzip and Install Dependencies
         run: |
-          # فك الضغط عن الاسم الجديد bot.zip
           unzip bot.zip
-          npm install axios 
+          # البحث عن المجلد الذي يحتوي على ملف package.json والدخول إليه
+          TARGET_DIR=$(find . -name "package.json" -exec dirname {} \; | head -n 1)
+          cd $TARGET_DIR
+          # تثبيت كل المكتبات المطلوبة للبوت + مكتبة الذكاء الاصطناعي
+          npm install
+          npm install axios
 
       - name: Inject AI Logic
         run: |
-          cat << 'AI' > ai_logic.js
+          # حقن منطق الذكاء الاصطناعي في المجلد الصحيح
+          TARGET_DIR=$(find . -name "package.json" -exec dirname {} \; | head -n 1)
+          cat << 'AI' > $TARGET_DIR/ai_logic.js
           const axios = require('axios');
           async function getReply(text) {
             try {
@@ -38,10 +44,13 @@ jobs:
           }
           module.exports = { getReply };
           AI
+          # نقل ملف الكوكيز للمجلد الصحيح لكي يراه البوت
+          cp appstate.json $TARGET_DIR/
 
       - name: Start Facebook Bot
         run: |
-          # البحث عن ملف التشغيل index.js وتشغيله
-          FILE=$(find . -name "index.js" | head -n 1)
-          if [ -z "$FILE" ]; then FILE="index.js"; fi
+          TARGET_DIR=$(find . -name "package.json" -exec dirname {} \; | head -n 1)
+          cd $TARGET_DIR
+          # البحث عن ملف التشغيل (غالباً index.js)
+          FILE=$(find . -maxdepth 1 -name "index.js" -o -name "main.js" | head -n 1)
           node $FILE
