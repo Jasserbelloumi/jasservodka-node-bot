@@ -19,13 +19,41 @@ jobs:
         run: |
           unzip bot.zip
           cd TatsuYTB || cd .
-          npm install --production
-          npm install uuid@8.3.2 axios fca-horizon-remastered
+          
+          # تثبيت المكتبات الناقصة التي ظهرت في الخطأ
+          npm install bluebird axios uuid@8.3.2
+          
+          # تثبيت بقية المكتبات الموجودة في المشروع
+          npm install --production || true
+          
+          # نقل الكوكيز
           cp ../appstate.json .
 
-      - name: Start Bot with Logging
+      - name: Configure and Inject AI
         run: |
           cd TatsuYTB || cd .
-          echo "🚀 محاولة تشغيل البوت الآن..."
-          # تشغيل البوت مع إجبار إخراج السجلات فوراً
-          node index.js & sleep 60 && kill $! || true
+          sed -i 's/"PREFIX": ""/"PREFIX": "."/g' config.json
+          sed -i 's/"ADMINBOT": \[ "" \]/"ADMINBOT": [ "100000917675367" ]/g' config.json
+          
+          # حقن منطق الذكاء الاصطناعي
+          cat << 'AI' > ai_logic.js
+          const axios = require('axios');
+          async function getReply(text) {
+            try {
+              const r = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+                model: 'openai/gpt-3.5-turbo',
+                messages: [{role: 'user', content: text}]
+              }, {
+                headers: { Authorization: 'Bearer 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' }
+              });
+              return r.data.choices[0].message.content;
+            } catch (e) { return "🤖 خطأ في الاتصال بالذكاء الاصطناعي"; }
+          }
+          module.exports = { getReply };
+          AI
+
+      - name: Start Facebook Bot
+        run: |
+          cd TatsuYTB || cd .
+          # تشغيل البوت وإبقاؤه يعمل لمدة ساعة
+          node index.js & sleep 3600
