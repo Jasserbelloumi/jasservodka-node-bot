@@ -13,23 +13,28 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 16  # نستخدم إصدار 16 لزيادة التوافق مع البوتات القديمة
 
-      - name: Unzip and Install Dependencies
+      - name: Unzip and Fix Dependencies
         run: |
           unzip bot.zip
-          # البحث عن المجلد الذي يحتوي على ملف package.json والدخول إليه
-          TARGET_DIR=$(find . -name "package.json" -exec dirname {} \; | head -n 1)
-          cd $TARGET_DIR
-          # تثبيت كل المكتبات المطلوبة للبوت + مكتبة الذكاء الاصطناعي
+          # الدخول للمجلد الذي يحتوي على الكود
+          cd TatsuYTB || cd .
+          
+          # تثبيت المكتبات الأساسية
           npm install
-          npm install axios
+          
+          # حل مشكلة ERR_REQUIRE_ESM بإجبار السيرفر على نسخة قديمة متوافقة
+          npm install uuid@8.3.2 axios
+          
+          # نقل ملف الكوكيز لمكانه الصحيح
+          cp ../appstate.json .
 
       - name: Inject AI Logic
         run: |
-          # حقن منطق الذكاء الاصطناعي في المجلد الصحيح
-          TARGET_DIR=$(find . -name "package.json" -exec dirname {} \; | head -n 1)
-          cat << 'AI' > $TARGET_DIR/ai_logic.js
+          # حقن الذكاء الاصطناعي داخل مجلد البوت
+          cd TatsuYTB || cd .
+          cat << 'AI' > ai_logic.js
           const axios = require('axios');
           async function getReply(text) {
             try {
@@ -44,13 +49,9 @@ jobs:
           }
           module.exports = { getReply };
           AI
-          # نقل ملف الكوكيز للمجلد الصحيح لكي يراه البوت
-          cp appstate.json $TARGET_DIR/
 
       - name: Start Facebook Bot
         run: |
-          TARGET_DIR=$(find . -name "package.json" -exec dirname {} \; | head -n 1)
-          cd $TARGET_DIR
-          # البحث عن ملف التشغيل (غالباً index.js)
-          FILE=$(find . -maxdepth 1 -name "index.js" -o -name "main.js" | head -n 1)
-          node $FILE
+          cd TatsuYTB || cd .
+          # تشغيل البوت مباشرة
+          node index.js
