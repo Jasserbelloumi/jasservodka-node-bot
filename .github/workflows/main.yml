@@ -1,0 +1,46 @@
+name: Facebook AI Bot Auto-Setup
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Unzip and Install
+        run: |
+          unzip "TatsuYTB (1).zip"
+          # الدخول للمجلد المفكوك (تأكد من الاسم الصحيح بعد فك الضغط)
+          # سنفترض أن الملفات فُكت في المجلد الحالي
+          npm install axios 
+
+      - name: Inject AI Logic
+        run: |
+          # هذا السطر سيقوم بتعديل ملف الرد الأساسي (سأفترض اسمه index.js)
+          # وسيجعله يتصل بـ OpenRouter للرد على أي رسالة
+          cat << 'AI' > ai_logic.js
+          const axios = require('axios');
+          async function getReply(text) {
+            try {
+              const r = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+                model: 'openai/gpt-3.5-turbo',
+                messages: [{role: 'user', content: text}]
+              }, {
+                headers: { Authorization: 'Bearer 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' }
+              });
+              return r.data.choices[0].message.content;
+            } catch (e) { return "🤖 خطأ في الاتصال بالذكاء الاصطناعي"; }
+          }
+          module.exports = { getReply };
+          AI
+
+      - name: Start Facebook Bot
+        run: node index.js
