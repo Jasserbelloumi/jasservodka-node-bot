@@ -20,37 +20,23 @@ jobs:
           unzip bot.zip
           cd TatsuYTB || cd .
           npm install
-          npm install uuid@8.3.2 axios
+          # تثبيت إصدارات متوافقة جداً
+          npm install uuid@8.3.2 axios fca-horizon-remastered
           cp ../appstate.json .
 
-      - name: Configure Bot and Inject AI
+      - name: Configure and Fix Login
         run: |
           cd TatsuYTB || cd .
           
-          # تعديل ملف config.json برمجياً بالـ ID الخاص بك
+          # تعديل config.json
           sed -i 's/"PREFIX": ""/"PREFIX": "."/g' config.json
-          # وضع الـ ID الخاص بك كأدمن
           sed -i 's/"ADMINBOT": \[ "" \]/"ADMINBOT": [ "100000917675367" ]/g' config.json
-          sed -i 's/"BOTNAME": ""/"BOTNAME": "Jasser AI Bot"/g' config.json
-
-          # حقن منطق الذكاء الاصطناعي
-          cat << 'AI' > ai_logic.js
-          const axios = require('axios');
-          async function getReply(text) {
-            try {
-              const r = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-                model: 'openai/gpt-3.5-turbo',
-                messages: [{role: 'user', content: text}]
-              }, {
-                headers: { Authorization: 'Bearer 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' }
-              });
-              return r.data.choices[0].message.content;
-            } catch (e) { return "🤖 عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي."; }
-          }
-          module.exports = { getReply };
-          AI
+          
+          # تغيير الـ User-Agent ليكون أكثر استقراراً (أندرويد)
+          sed -i 's/Mozilla\/5.0.*/Mozilla\/5.0 (Linux; Android 13; SM-S901B) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/112.0.0.0 Mobile Safari\/537.36/g' config.json
 
       - name: Start Facebook Bot
         run: |
           cd TatsuYTB || cd .
-          node index.js
+          # تشغيل البوت مع إظهار كل الأخطاء في الشاشة
+          DEBUG=fca-horizon-remastered node index.js
