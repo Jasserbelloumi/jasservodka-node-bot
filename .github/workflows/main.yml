@@ -13,27 +13,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16  # نستخدم إصدار 16 لزيادة التوافق مع البوتات القديمة
+          node-version: 16
 
       - name: Unzip and Fix Dependencies
         run: |
           unzip bot.zip
-          # الدخول للمجلد الذي يحتوي على الكود
           cd TatsuYTB || cd .
-          
-          # تثبيت المكتبات الأساسية
           npm install
-          
-          # حل مشكلة ERR_REQUIRE_ESM بإجبار السيرفر على نسخة قديمة متوافقة
           npm install uuid@8.3.2 axios
-          
-          # نقل ملف الكوكيز لمكانه الصحيح
           cp ../appstate.json .
 
-      - name: Inject AI Logic
+      - name: Configure Bot and Inject AI
         run: |
-          # حقن الذكاء الاصطناعي داخل مجلد البوت
           cd TatsuYTB || cd .
+          
+          # تعديل ملف config.json برمجياً بالـ ID الخاص بك
+          sed -i 's/"PREFIX": ""/"PREFIX": "."/g' config.json
+          # وضع الـ ID الخاص بك كأدمن
+          sed -i 's/"ADMINBOT": \[ "" \]/"ADMINBOT": [ "100000917675367" ]/g' config.json
+          sed -i 's/"BOTNAME": ""/"BOTNAME": "Jasser AI Bot"/g' config.json
+
+          # حقن منطق الذكاء الاصطناعي
           cat << 'AI' > ai_logic.js
           const axios = require('axios');
           async function getReply(text) {
@@ -45,7 +45,7 @@ jobs:
                 headers: { Authorization: 'Bearer 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' }
               });
               return r.data.choices[0].message.content;
-            } catch (e) { return "🤖 خطأ في الاتصال بالذكاء الاصطناعي"; }
+            } catch (e) { return "🤖 عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي."; }
           }
           module.exports = { getReply };
           AI
@@ -53,5 +53,4 @@ jobs:
       - name: Start Facebook Bot
         run: |
           cd TatsuYTB || cd .
-          # تشغيل البوت مباشرة
           node index.js
