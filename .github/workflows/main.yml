@@ -19,24 +19,13 @@ jobs:
         run: |
           unzip bot.zip
           cd TatsuYTB || cd .
-          npm install
-          # تثبيت إصدارات متوافقة جداً
+          npm install --production
           npm install uuid@8.3.2 axios fca-horizon-remastered
           cp ../appstate.json .
 
-      - name: Configure and Fix Login
+      - name: Start Bot with Logging
         run: |
           cd TatsuYTB || cd .
-          
-          # تعديل config.json
-          sed -i 's/"PREFIX": ""/"PREFIX": "."/g' config.json
-          sed -i 's/"ADMINBOT": \[ "" \]/"ADMINBOT": [ "100000917675367" ]/g' config.json
-          
-          # تغيير الـ User-Agent ليكون أكثر استقراراً (أندرويد)
-          sed -i 's/Mozilla\/5.0.*/Mozilla\/5.0 (Linux; Android 13; SM-S901B) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/112.0.0.0 Mobile Safari\/537.36/g' config.json
-
-      - name: Start Facebook Bot
-        run: |
-          cd TatsuYTB || cd .
-          # تشغيل البوت مع إظهار كل الأخطاء في الشاشة
-          DEBUG=fca-horizon-remastered node index.js
+          echo "🚀 محاولة تشغيل البوت الآن..."
+          # تشغيل البوت مع إجبار إخراج السجلات فوراً
+          node index.js & sleep 60 && kill $! || true
